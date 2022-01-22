@@ -8,7 +8,32 @@
 
 
 #define MAX(x, y) ((x) >= (y) ? (x) : (y)) 
-// Stretch buffers by Sean Barret
+
+void* xrealloc(void* ptr, size_t num_bytes)
+{
+	ptr = realloc(ptr, num_bytes);
+	if (!ptr)
+	{
+		perror("Realloc failed");
+		exit(1);
+	}
+		
+	return ptr;
+}
+
+void* xmalloc(size_t num_bytes)
+{
+	void *ptr = malloc(num_bytes);
+	if (!ptr)
+	{
+		perror("Malloc failed");
+		exit(1);
+	}
+
+	return ptr;
+}
+
+// Stretchy buffers by Sean Barret
 
 typedef struct bufHdr
 {
@@ -34,11 +59,11 @@ void *buf__grow(const void* buf, size_t new_len, size_t elem_size)
 	bufHdr *new_hdr;
 	if (buf)
 	{
-		new_hdr = realloc(buf__hdr(buf), new_size);
+		new_hdr = xrealloc(buf__hdr(buf), new_size);
 	}
 	else
 	{
-		new_hdr = malloc(new_size);
+		new_hdr = xmalloc(new_size);
 		new_hdr->len = 0;
 	}
 	new_hdr->cap = new_cap;
@@ -154,7 +179,6 @@ void lex_test()
 
 int main(int argc, char **argv)
 {
-	printf("%d\n", sizeof(bufHdr));
 	buf_test();
 	lex_test();
 	return 0;
