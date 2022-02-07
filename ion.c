@@ -52,7 +52,7 @@ typedef struct bufHdr
 {
 	size_t len;
 	size_t cap;
-	char buf[0];
+	char buf[];
 } bufHdr;
 
 #define buf__hdr(b) ((bufHdr *)((char *)b - offsetof(bufHdr, buf)))
@@ -61,7 +61,7 @@ typedef struct bufHdr
 
 #define buf_len(b) ((b) ? buf__hdr(b)->len : 0)
 #define buf_cap(b) ((b) ? buf__hdr(b)->cap : 0)
-#define buf_push(b, x) (buf__fit(b, 1), (b)[buf__hdr(b)->len++] = (x))
+#define buf_push(b, ...) (buf__fit(b, 1), (b)[buf__hdr(b)->len++] = (__VA_ARGS__))
 #define buf_free(b) ((b) ? free(buf__hdr(b)) : 0)
 
 void *buf__grow(const void* buf, size_t new_len, size_t elem_size)
@@ -85,19 +85,19 @@ void *buf__grow(const void* buf, size_t new_len, size_t elem_size)
 
 void buf_test()
 {
-	int *asdf = NULL;
+	int *buf = NULL;
 	enum {N = 1024};
 	for (int i = 0; i < N; i++)
 	{
-		buf_push(asdf, i);
+		buf_push(buf, i);
 	}
-	assert(buf_len(asdf) == N);
+	assert(buf_len(buf) == N);
 
-	for (int i = 0; i < buf_len(asdf); i++)
+	for (int i = 0; i < buf_len(buf); i++)
 	{
-		assert(asdf[i] == i);
+		assert(buf[i] == i);
 	}
-	buf_free(asdf);
+	buf_free(buf);
 }
 
 typedef struct internStr
@@ -153,6 +153,33 @@ typedef enum tokenKind
 	TOKEN_NAME
 	// ...
 } tokenKind;
+
+typedef enum nameKind
+{
+	/*
+	'+'|'-'|'^'|'|'
+	*/
+	ADD,
+	SUB,
+	XOR,
+	OR,
+	
+	/*
+	'*'|'/'|'>>'|'<<'|'%'|'&'
+	*/
+	MUL,
+	DIV,
+	RSH,
+	LSH,
+	MOD,
+	AND,
+
+	/*
+	'-'|'~'
+	*/
+	NEG,
+	NOT
+} nameKind;
 
 const char* token_kind_name(tokenKind kind)
 {
@@ -268,17 +295,17 @@ void print_token(token tokObj)
 	}
 }
 
-inline bool is_token(tokenKind kind)
+static inline bool is_token(tokenKind kind)
 {
 	return tok.kind == kind;
 }
 
-inline bool is_token_name(const char* name)
+static inline bool is_token_name(const char* name)
 {
 	return tok.kind == TOKEN_NAME && tok.name == name;
 }
 
-inline bool match_token(tokenKind kind)
+static inline bool match_token(tokenKind kind)
 {
 	if (is_token(kind))
 	{
@@ -291,7 +318,7 @@ inline bool match_token(tokenKind kind)
 	}
 }
 
-inline bool expect_token(tokenKind kind)
+static inline bool expect_token(tokenKind kind)
 {
 	if (is_token(kind))
 	{
@@ -433,11 +460,48 @@ void parse_test()
 
 #undef TEST_EXPR; 
 
+// Virtual machine
+
+#define POP() *(--top)
+#define PUSH(x) (*top++ = (x))
+#define POPS(n) assert(top - stack >= (n))
+#define PUSHES(n) assert(top + (n) <= stack + MAX_STACK)
+
+int32_t vm_exec(const uint8_t *code)
+{
+	enum {MAX_STACK = 1024};
+	int32_t stack[MAX_STACK];
+	int32_t* top = stack;
+	for (;;)
+	{
+		uint8_t op = *code++;
+
+		switch (op)
+		{
+		case SUB:
+		{
+
+		} break;
+
+		case ADD:
+		{
+			break;
+		}
+		}
+	}
+}
+
+void vm_test()
+{
+
+}
+
 int main(int argc, char **argv)
 {
 	buf_test();
 	lex_test();
 	str_intern_test();
 	parse_test();
+	vm_test();
 	return 0;
 }
