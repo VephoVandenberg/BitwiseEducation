@@ -304,7 +304,7 @@ void scan_int()
 		else if (tolower(*stream) == 'b')
 		{
 			stream++;
-			tok.mod = TOKENMOD_HEX;
+			tok.mod = TOKENMOD_BIN;
 			base = 2;
 		}
 		else if (isdigit(*stream))
@@ -674,7 +674,7 @@ static inline bool expect_token(tokenKind kind)
 #define assert_token_name(x) assert(tok.name == str_intern(x) && match_token(TOKEN_NAME))
 #define assert_token_int(x) assert(tok.int_val == (x) && match_token(TOKEN_INT))
 #define assert_token_float(x) assert(tok.float_val == (x) && match_token(TOKEN_FLOAT))
-#define assert_token_str(x) assert(strcmp(tok.str_val, (x)) && match_token(TOKEN_STR))
+#define assert_token_str(x) assert(strcmp(tok.str_val, (x)) == 0 && match_token(TOKEN_STR))
 #define assert_token_eof() assert(is_token(0))
 
 
@@ -861,5 +861,6 @@ void run_tests()
 
 int main(int argc, char **argv)
 {
+	run_tests();
 	return 0;
 }
